@@ -97,7 +97,7 @@ module.exports = function (content) {
       classPrefix: 'classPrefix' in fontConfig ? fontConfig.classPrefix : 'icon-'
     },
     dest: '',
-    writeFiles: false,
+    writeFiles: fontConfig.writeFiles || false,
     embed: fontConfig.embed || false,
     formatOptions: fontConfig.formatOptions || {}
   };
@@ -115,6 +115,10 @@ module.exports = function (content) {
 
   if (fontConfig.cssTemplate) {
     generatorOptions.cssTemplate = path.resolve(this.context, fontConfig.cssTemplate);
+  }
+
+  if (fontConfig.cssDest) {
+    generatorOptions.cssDest = path.resolve(this.context, fontConfig.cssDest);
   }
 
   if (fontConfig.cssFontsPath) {
@@ -143,6 +147,10 @@ module.exports = function (content) {
 
   if (generatorOptions.cssTemplate) {
     this.addDependency(generatorOptions.cssTemplate);
+  }
+
+  if (generatorOptions.cssDest) {
+    this.addDependency(generatorOptions.cssDest);
   }
 
   if (generatorOptions.cssFontsPath) {

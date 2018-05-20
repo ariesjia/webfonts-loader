@@ -69,7 +69,6 @@ function wpGetOptions (context) {
 
 function writeFile(content, dest) {
   mkdirp.sync(path.dirname(dest))
-  console.log(content, dest)
   fs.writeFileSync(dest, content)
 }
 

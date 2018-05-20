@@ -200,6 +200,7 @@ module.exports = function (content) {
       var source = fs.readFileSync(templateDist, 'utf8')
       var template = handlebars.compile(source)
       var ctx = {
+        fontName: generatorOptions.fontName,
         codepoints: _.object(_.map(generatorOptions.codepoints, function(codepoint, name) {
           return [name, codepoint.toString(16)]
         }))

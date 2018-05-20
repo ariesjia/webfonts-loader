@@ -1,0 +1,9 @@
+@if not variable-exists('webfont-icons') {
+	$webfont-icons: () !global;
+}
+
+$webfont-icons: map-merge($webfont-icons, (
+	{{#each codepoints}}
+		'{{@key}}': ('{{this}}'),
+	{{/each}}
+));

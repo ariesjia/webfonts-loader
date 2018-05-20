@@ -1,9 +1,15 @@
 var loaderUtils = require('loader-utils');
 var webfontsGenerator = require('webfonts-generator');
+var _ = require('underscore')
+var handlebars = require('handlebars')
 var path = require('path');
+var fs = require('fs')
 var glob = require('glob');
 var url = require('url');
+var mkdirp = require('mkdirp')
 var hashFiles = require('./utils').hashFiles;
+
+var SCSS_TEMPLATE = path.join(__dirname, 'templates', 'scss.hbs')
 
 var mimeTypes = {
   'eot': 'application/vnd.ms-fontobject',
@@ -59,6 +65,12 @@ function getFilesAndDeps (patterns, context) {
 function wpGetOptions (context) {
   if (typeof context.query === 'string') return loaderUtils.getOptions(context);
   return context.query;
+}
+
+function writeFile(content, dest) {
+  mkdirp.sync(path.dirname(dest))
+  console.log(content, dest)
+  fs.writeFileSync(dest, content)
 }
 
 module.exports = function (content) {
@@ -117,10 +129,6 @@ module.exports = function (content) {
     generatorOptions.cssTemplate = path.resolve(this.context, fontConfig.cssTemplate);
   }
 
-  if (fontConfig.cssDest) {
-    generatorOptions.cssDest = path.resolve(this.context, fontConfig.cssDest);
-  }
-
   if (fontConfig.cssFontsPath) {
     generatorOptions.cssFontsPath = path.resolve(this.context, fontConfig.cssFontsPath);
   }
@@ -149,10 +157,6 @@ module.exports = function (content) {
     this.addDependency(generatorOptions.cssTemplate);
   }
 
-  if (generatorOptions.cssDest) {
-    this.addDependency(generatorOptions.cssDest);
-  }
-
   if (generatorOptions.cssFontsPath) {
     this.addDependency(generatorOptions.cssFontsPath);
   }
@@ -166,12 +170,12 @@ module.exports = function (content) {
       var format = formats[i];
       var filename = fontConfig.fileName || options.fileName || '[chunkhash]-[fontname].[ext]';
       var chunkHash = filename.indexOf('[chunkhash]') !== -1
-            ? hashFiles(generatorOptions.files, options.hashLength) : '';
+        ? hashFiles(generatorOptions.files, options.hashLength) : '';
 
       filename = filename
-                  .replace('[chunkhash]', chunkHash)
-                  .replace('[fontname]', generatorOptions.fontName)
-                  .replace('[ext]', format);
+        .replace('[chunkhash]', chunkHash)
+        .replace('[fontname]', generatorOptions.fontName)
+        .replace('[ext]', format);
 
       if (!embed) {
         var formatFilename = loaderUtils.interpolateName(this,
@@ -185,10 +189,23 @@ module.exports = function (content) {
         this.emitFile(formatFilename, res[format]);
       } else {
         urls[format] = 'data:' +
-        mimeTypes[format] +
-        ';charset=utf-8;base64,' +
-        (Buffer.from(res[format]).toString('base64'));
+          mimeTypes[format] +
+          ';charset=utf-8;base64,' +
+          (Buffer.from(res[format]).toString('base64'));
       }
+    }
+
+    if(fontConfig.scssDest) {
+      const scssDest = path.resolve(this.context, fontConfig.scssDest)
+      const templateDist = fontConfig.scssTemplate ? path.resolve(this.context, fontConfig.scssTemplate) :  SCSS_TEMPLATE
+      var source = fs.readFileSync(templateDist, 'utf8')
+      var template = handlebars.compile(source)
+      var ctx = {
+        codepoints: _.object(_.map(generatorOptions.codepoints, function(codepoint, name) {
+          return [name, codepoint.toString(16)]
+        }))
+      }
+      writeFile(template(ctx), scssDest)
     }
 
     cb(null, res.generateCss(urls));

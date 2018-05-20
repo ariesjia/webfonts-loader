@@ -6,7 +6,7 @@ $webfont-family: "{{fontName}}";
 
 $webfont-icons: map-merge($webfont-icons, (
   {{#each codepoints}}
-    '{{@key}}': ('\{{this}}'),
+    '{{@key}}': ('\\{{this}}'),
   {{/each}}
 ));
 
